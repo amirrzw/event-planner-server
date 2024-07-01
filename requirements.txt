@@ -2,3 +2,7 @@ Django~=4.2.13
 psycopg2-binary
 dj-database-url
 python-dotenv
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+django-rest-passwordreset
