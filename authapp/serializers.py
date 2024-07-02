@@ -1,8 +1,42 @@
-from rest_framework import serializers
-from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+
+from rest_framework import serializers
+from django.contrib.auth.models import User
+from django_rest_passwordreset.models import ResetPasswordToken
+from django.contrib.auth.password_validation import validate_password
+
+from authapp.models import UserProfile
+
+
+class EmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User with this email does not exist.")
+        return value
+
+
+class ResetPasswordConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    password = serializers.CharField(validators=[validate_password])
+
+    def validate(self, attrs):
+        try:
+            reset_password_token = ResetPasswordToken.objects.get(key=attrs['token'])
+        except ResetPasswordToken.DoesNotExist:
+            raise serializers.ValidationError("Invalid token.")
+        return attrs
+
+    def save(self):
+        reset_password_token = ResetPasswordToken.objects.get(key=self.validated_data['token'])
+        user = reset_password_token.user
+        user.set_password(self.validated_data['password'])
+        user.save()
+        reset_password_token.delete()  # Invalidate the token after use
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -32,6 +66,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
+
+        UserProfile.objects.create(user=user, raw_password=validated_data['password'])
+
         return user
 
 

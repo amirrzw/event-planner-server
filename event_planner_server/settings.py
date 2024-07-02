@@ -31,6 +31,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.your-email-provider.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'oxfvard@gmail.com'
+EMAIL_HOST_PASSWORD = 'ki@n8128'
+DEFAULT_FROM_EMAIL = 'oxfvard@gmail.com'
+
 # Application definition
 
 INSTALLED_APPS = [
