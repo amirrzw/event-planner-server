@@ -1,21 +1,24 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
-from .models import Category, Task
-from .serializers import CategorySerializer, TaskSerializer
 from django.utils import timezone
+from rest_framework import viewsets
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+from .models import Plan, Task
+from .serializers import PlanSerializer, TaskSerializer
+
+
+class PlanViewSet(viewsets.ModelViewSet):
+    queryset = Plan.objects.all()
+    serializer_class = PlanSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Category.objects.filter(user=self.request.user)
+        return Plan.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
@@ -24,11 +27,11 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Task.objects.filter(user=self.request.user).order_by('deadline')
-        category = self.request.query_params.get('category')
+        plan = self.request.query_params.get('plan')
         status = self.request.query_params.get('status')
         priority = self.request.query_params.get('priority')
-        if category:
-            queryset = queryset.filter(category__id=category)
+        if plan:
+            queryset = queryset.filter(plan__id=plan)
         if status:
             queryset = queryset.filter(status=status)
         if priority:
@@ -43,12 +46,12 @@ class TaskViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def schedule_tasks(request):
     user = request.user
-    category_id = request.query_params.get('category')
+    plan_id = request.query_params.get('plan')
 
-    if not category_id:
-        return Response({"error": "Category ID is required"}, status=400)
+    if not plan_id:
+        return Response({"error": "Plan ID is required"}, status=400)
 
-    tasks = Task.objects.filter(user=user, category_id=category_id, status='TODO')
+    tasks = Task.objects.filter(user=user, plan_id=plan_id, status='TODO')
     current_time = timezone.now()
 
     def calculate_score(task):
