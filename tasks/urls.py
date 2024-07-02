@@ -1,9 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import CategoryViewSet, TaskViewSet, schedule_tasks
+from .views import PlanViewSet, TaskViewSet, schedule_tasks
 
 router = DefaultRouter()
-router.register(r'categories', CategoryViewSet)
+router.register(r'plans', PlanViewSet)
 router.register(r'tasks', TaskViewSet)
 
 urlpatterns = [

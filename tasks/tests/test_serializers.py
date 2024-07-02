@@ -1,17 +1,17 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from tasks.models import Category, Task
-from tasks.serializers import TaskSerializer, CategorySerializer
+from tasks.models import Plan, Task
+from tasks.serializers import TaskSerializer, PlanSerializer
 from django.utils import timezone
 from datetime import datetime
 
 class TaskSerializerTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.category = Category.objects.create(user=self.user, name='University')
+        self.plan = Plan.objects.create(user=self.user, title='University Plan', description='Plan for university tasks')
         self.task = Task.objects.create(
             user=self.user,
-            category=self.category,
+            plan=self.plan,
             title='Test Task',
             description='This is a test task',
             status='TODO',
@@ -22,7 +22,7 @@ class TaskSerializerTest(TestCase):
 
     def test_serializer_fields(self):
         data = self.serializer.data
-        self.assertEqual(set(data.keys()), set(['id', 'user', 'category', 'title', 'description', 'status', 'priority', 'deadline', 'created_at', 'updated_at']))
+        self.assertEqual(set(data.keys()), set(['id', 'user', 'plan', 'title', 'description', 'status', 'priority', 'deadline', 'created_at', 'updated_at']))
 
     def test_task_content(self):
         data = self.serializer.data
@@ -30,19 +30,20 @@ class TaskSerializerTest(TestCase):
         self.assertEqual(data['description'], 'This is a test task')
         self.assertEqual(data['status'], 'TODO')
         self.assertEqual(data['priority'], 'HIGH')
-        self.assertEqual(data['deadline'], '2024-12-31T23:59:59Z')  # Updated to match the expected format
-        self.assertEqual(data['category'], self.category.id)
+        self.assertEqual(data['deadline'], '2024-12-31T23:59:59Z')
+        self.assertEqual(data['plan'], self.plan.id)
 
-class CategorySerializerTest(TestCase):
+class PlanSerializerTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.category = Category.objects.create(user=self.user, name='University')
-        self.serializer = CategorySerializer(instance=self.category)
+        self.plan = Plan.objects.create(user=self.user, title='University Plan', description='Plan for university tasks')
+        self.serializer = PlanSerializer(instance=self.plan)
 
     def test_serializer_fields(self):
         data = self.serializer.data
-        self.assertEqual(set(data.keys()), set(['id', 'user', 'name']))
+        self.assertEqual(set(data.keys()), set(['id', 'user', 'title', 'description']))
 
-    def test_category_content(self):
+    def test_plan_content(self):
         data = self.serializer.data
-        self.assertEqual(data['name'], 'University')
+        self.assertEqual(data['title'], 'University Plan')
+        self.assertEqual(data['description'], 'Plan for university tasks')
