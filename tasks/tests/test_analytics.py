@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from django.contrib.auth.models import User
-from tasks.models import Category, Task
+from tasks.models import Plan, Task
 from datetime import datetime, timedelta
 from django.utils import timezone
 
@@ -10,10 +10,10 @@ class AnalyticsTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='testpass')
         self.client.login(username='testuser', password='testpass')
-        self.category = Category.objects.create(user=self.user, name='University')
+        self.plan = Plan.objects.create(user=self.user, title='University Plan', description='Plan for university tasks')
         self.task1 = Task.objects.create(
             user=self.user,
-            category=self.category,
+            plan=self.plan,
             title='Completed Task 1',
             description='This task is completed',
             status='COMPLETED',
@@ -23,7 +23,7 @@ class AnalyticsTest(APITestCase):
         )
         self.task2 = Task.objects.create(
             user=self.user,
-            category=self.category,
+            plan=self.plan,
             title='Pending Task 1',
             description='This task is pending',
             status='TODO',
