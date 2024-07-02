@@ -4,6 +4,35 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from rest_framework import generics, permissions
+from rest_framework.response import Response
+from .models import Notification, Plan, Task
+from .serializers import NotificationSerializer, PlanSerializer, TaskSerializer
+
+
+class NotificationListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user, read=False).order_by('-created_at')
+
+
+class MarkNotificationAsReadView(generics.UpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = NotificationSerializer
+    queryset = Notification.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        notification = self.get_object()
+        notification.read = True
+        notification.save()
+        return Response({"detail": "Notification marked as read."})
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
 from .models import Plan, Task
 from .serializers import PlanSerializer, TaskSerializer
 

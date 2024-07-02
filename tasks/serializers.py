@@ -1,11 +1,23 @@
 from rest_framework import serializers
 from .models import Plan, Task
 
+from rest_framework import serializers
+from .models import Notification
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'user', 'task', 'message', 'created_at', 'read']
+        read_only_fields = ['user', 'task', 'message', 'created_at']
+
+
 class PlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plan
         fields = ['id', 'user', 'title', 'description']
         read_only_fields = ['id', 'user']
+
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
