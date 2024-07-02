@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     "django_rest_passwordreset",
     "authapp",# Our custom app for authentication
     "tasks",
+    "django_celery_beat",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -168,3 +170,28 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
 }
+
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+CELERY_BEAT_SCHEDULE = {
+    'check_task_deadlines': {
+        'task': 'tasks.tasks.check_task_deadlines',
+        'schedule': 60.0,  # Check every minute
+    },
+}
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+ASGI_APPLICATION = "event_planner_server.asgi.application"
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+

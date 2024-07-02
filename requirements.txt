@@ -6,3 +6,8 @@ djangorestframework
 djangorestframework-simplejwt
 django-cors-headers
 django-rest-passwordreset
+celery
+redis
+channels
+django-celery-beat
+channels-redis
