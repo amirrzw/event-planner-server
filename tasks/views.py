@@ -6,6 +6,32 @@ from .serializers import CategorySerializer, TaskSerializer
 from django.utils import timezone
 from rest_framework.response import Response
 
+from rest_framework import generics, permissions
+from rest_framework.response import Response
+from .models import Notification
+from .serializers import NotificationSerializer
+
+
+class NotificationListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user, read=False).order_by('-created_at')
+
+
+class MarkNotificationAsReadView(generics.UpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = NotificationSerializer
+    queryset = Notification.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        notification = self.get_object()
+        notification.read = True
+        notification.save()
+        return Response({"detail": "Notification marked as read."})
+
+
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -16,6 +42,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
