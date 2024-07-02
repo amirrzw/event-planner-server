@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth.models import User
-from tasks.models import Task, Notification, Category
+from tasks.models import Task, Notification, Plan
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
@@ -14,10 +14,10 @@ class TestNotification(APITestCase):
             email='testuser@example.com',
             password='testpassword123'
         )
-        self.category = Category.objects.create(user=self.user, name="Work")
+        self.plan = Plan.objects.create(user=self.user, title="Test Plan", description="Plan description")
         self.task = Task.objects.create(
             user=self.user,
-            category=self.category,
+            plan=self.plan,
             title='Test Task',
             description='Task description',
             status='TODO',

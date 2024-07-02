@@ -30,13 +30,6 @@ class MarkNotificationAsReadView(generics.UpdateAPIView):
         return Response({"detail": "Notification marked as read."})
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-from .models import Plan, Task
-from .serializers import PlanSerializer, TaskSerializer
-
-
 class PlanViewSet(viewsets.ModelViewSet):
     queryset = Plan.objects.all()
     serializer_class = PlanSerializer
