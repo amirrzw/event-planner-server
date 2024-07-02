@@ -3,9 +3,10 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from datetime import timedelta
+from django.db.models import Count
 
 from rest_framework import generics, permissions
-from rest_framework.response import Response
 from .models import Notification, Plan, Task
 from .serializers import NotificationSerializer, PlanSerializer, TaskSerializer
 
@@ -86,3 +87,57 @@ def schedule_tasks(request):
     sorted_tasks = sorted(tasks, key=calculate_score, reverse=True)
     serializer = TaskSerializer(sorted_tasks, many=True)
     return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def task_completion_statistics(request):
+    user = request.user
+    total_tasks = Task.objects.filter(user=user).count()
+    completed_tasks = Task.objects.filter(user=user, status='COMPLETED').count()
+    pending_tasks = total_tasks - completed_tasks
+
+    data = {
+        'total_tasks': total_tasks,
+        'completed_tasks': completed_tasks,
+        'pending_tasks': pending_tasks,
+    }
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def progress_reports(request, period='weekly'):
+    user = request.user
+    now = timezone.now()
+    if period == 'weekly':
+        start_date = now - timedelta(days=7)
+    elif period == 'monthly':
+        start_date = now - timedelta(days=30)
+    else:
+        return Response({"error": "Invalid period. Use 'weekly' or 'monthly'."}, status=400)
+
+    tasks = Task.objects.filter(user=user, created_at__gte=start_date)
+    total_tasks = tasks.count()
+    completed_tasks = tasks.filter(status='COMPLETED').count()
+
+    data = {
+        'total_tasks': total_tasks,
+        'completed_tasks': completed_tasks,
+    }
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def productivity_trends(request):
+    user = request.user
+    now = timezone.now()
+    start_date = now - timedelta(days=30)
+    completed_tasks_per_day = Task.objects.filter(
+        user=user,
+        status='COMPLETED',
+        updated_at__gte=start_date
+    ).extra({'day': 'date( updated_at )'}).values('day').annotate(completed=Count('id')).order_by('day')
+
+    data = {
+        'completed_tasks_per_day': list(completed_tasks_per_day),
+    }
+    return Response(data)
