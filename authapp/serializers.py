@@ -1,12 +1,16 @@
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django_rest_passwordreset.models import ResetPasswordToken
 from django.contrib.auth.password_validation import validate_password
-
 from authapp.models import UserProfile
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'date_joined']
 
 
 class EmailSerializer(serializers.Serializer):
@@ -18,7 +22,6 @@ class EmailSerializer(serializers.Serializer):
         except User.DoesNotExist:
             raise serializers.ValidationError("User with this email does not exist.")
         return value
-
 
 class ResetPasswordConfirmSerializer(serializers.Serializer):
     token = serializers.CharField()
@@ -38,14 +41,13 @@ class ResetPasswordConfirmSerializer(serializers.Serializer):
         user.save()
         reset_password_token.delete()  # Invalidate the token after use
 
-
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name')
+        fields = ('id', 'username', 'password', 'password2', 'email', 'first_name', 'last_name')
         extra_kwargs = {
             'first_name': {'required': True},
             'last_name': {'required': True},
@@ -70,7 +72,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         UserProfile.objects.create(user=user, raw_password=validated_data['password'])
 
         return user
-
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -101,3 +102,7 @@ class LoginSerializer(serializers.Serializer):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, validators=[validate_password])

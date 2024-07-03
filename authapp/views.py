@@ -2,13 +2,25 @@ from django.http import HttpResponse
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.contrib.auth.models import User
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import RegisterSerializer, LoginSerializer
 from rest_framework.views import APIView
+from .serializers import UserProfileSerializer
+
 
 
 def root_view(request):
     return HttpResponse("Welcome to the Event Planner API. Visit /admin for the admin interface.")
+
+
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserProfileSerializer(user)
+        return Response(serializer.data)
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()

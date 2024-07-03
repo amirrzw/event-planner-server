@@ -16,7 +16,12 @@ class UserAdmin(BaseUserAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
         if obj:
-            fieldsets[1] = (fieldsets[1][0], {'fields': ('password',) + fieldsets[1][1]['fields']})
+            # Create a new tuple instead of modifying the existing one
+            fieldsets = (
+                fieldsets[0],
+                (fieldsets[1][0], {'fields': ('password',) + fieldsets[1][1]['fields']}),
+                *fieldsets[2:]
+            )
         return fieldsets
 
 

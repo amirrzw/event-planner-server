@@ -1,15 +1,14 @@
-from django.core.mail import send_mail
-from django.conf import settings
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.models import User
+from authapp.serializers import EmailSerializer, ResetPasswordConfirmSerializer, ChangePasswordSerializer
 from django_rest_passwordreset.models import ResetPasswordToken
-from authapp.serializers import EmailSerializer, ResetPasswordConfirmSerializer
 from django_rest_passwordreset.views import get_password_reset_token_expiry_time
 from django_rest_passwordreset.signals import reset_password_token_created
 from django.dispatch import receiver
-
+from django.core.mail import send_mail
+from django.conf import settings
 
 # View to initiate the password reset process
 class CustomPasswordResetView(generics.GenericAPIView):
@@ -43,7 +42,6 @@ class CustomPasswordResetView(generics.GenericAPIView):
 
         return Response({"detail": "Password reset e-mail has been sent."}, status=status.HTTP_200_OK)
 
-
 # View to confirm the password reset process
 class CustomPasswordResetConfirmView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
@@ -55,6 +53,23 @@ class CustomPasswordResetConfirmView(generics.GenericAPIView):
         serializer.save()
         return Response({"detail": "Password has been reset with the new password."}, status=status.HTTP_200_OK)
 
+# View to change the password with old and new password
+class ChangePasswordView(generics.UpdateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ChangePasswordSerializer
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if not user.check_password(serializer.validated_data['old_password']):
+            return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        return Response({"detail": "Password has been changed."}, status=status.HTTP_200_OK)
 
 # Signal receiver to handle token creation
 @receiver(reset_password_token_created)

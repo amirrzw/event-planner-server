@@ -29,7 +29,7 @@ SECRET_KEY = "django-insecure-43y60v@1kdo)gje+a%d9w_=8jvw)51$tgd((-o*9ps!3k@s^_g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,10.0.2.2').split(',')
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = 'smtp.your-email-provider.com'
@@ -178,7 +178,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_BEAT_SCHEDULE = {
     'check_task_deadlines': {
         'task': 'tasks.tasks.check_task_deadlines',
-        'schedule': 60.0,  # Check every minute
+        'schedule': 30.0,  # Check every minute
     },
 }
 
@@ -194,4 +194,20 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# Add this at the end of your settings.py
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+}
+
 
